@@ -46,6 +46,7 @@ Currently, I can only maintain the devices I personally own, but contributions a
 | **Diium(SZDiiER)**   | **Diium Dr28s**                         | `logo/480P-270/`, `kernel/common/`, `consoles/dr28s/`        |
 |                      | **SZDiiER D007(Plus)**                   | `logo/480P/`, `kernel/common/`, `consoles/d007/`      |
 | **XiFan HandHelds**   | **XiFan Mymini**                        | `logo/480P/`, `kernel/common/`, `consoles/mymini/`      |
+|                      | **XiFan Mini40**                        | `logo/720P/`, `kernel/common/`, `consoles/mini40/`      |
 |                      | **XiFan R36Max**                        | `logo/720P/`, `kernel/common/`, `consoles/r36max/`      |
 |                      | **XiFan R36Pro**                        | `logo/480P/`, `kernel/common/`, `consoles/r36pro/`      |
 |                      | **XiFan XF35H**                         | `logo/480P/`, `kernel/common/`, `consoles/xf35h/`       |
@@ -53,13 +54,15 @@ Currently, I can only maintain the devices I personally own, but contributions a
 |                      | **XiFan XF40V**                         | `logo/720P/`, `kernel/common/`, `consoles/dc40v/`       |
 |                      | **XiFan DC35V**                         | `logo/480P/`, `kernel/common/`, `consoles/dc35v/`       |
 |                      | **XiFan DC40V**                         | `logo/720P/`, `kernel/common/`, `consoles/dc40v/`       |
+|                      | **XiFan XF28**                         | `logo/480P-1/`, `kernel/common/`, `consoles/xf28/`       |
 |**Other**             | **GameConsole HG36 （HG3506）**         | `logo/480P/`, `kernel/common/`, `consoles/hg36/`        |
 |                      | **GameConsole R36Ultra**                | `logo/720P/`, `kernel/common/`, `consoles/r36ultra/`    |
 |                      | **GameConsole RX6H**                    | `logo/480P/`, `kernel/common/`, `consoles/rx6h/`        |
 |                       | **GameConsole XGB36 (G26)**        | `logo/480P/`, `kernel/common/`, `consoles/xgb36/`       |
 |                      | **GameConsole T16MAX**                  | `logo/720P/`, `kernel/common/`, `consoles/t16max/`      |
-| | **GameConsole U8** | `logo/480P5-3/`, `kernel/common/`, `consoles/u8/` |
-| | **GameConsole U8 V2** | `logo/480P5-3/`, `kernel/common/`, `consoles/u8-v2/` |
+|                       | **GameConsole U8** | `logo/480P5-3/`, `kernel/common/`, `consoles/u8/` |
+|                       | **GameConsole U8 V2** | `logo/480P5-3/`, `kernel/common/`, `consoles/u8-v2/` |
+|                       | **GameConsole RG36** | `logo/480P/`, `kernel/common/`, `consoles/rg36/` |
 
 ---
 
@@ -94,8 +97,13 @@ If you are a non-Windows user, perform the configuration manually by mounting th
 
 ## Remapping the Joystick Axes
 
-Visit the [Joymux-Fix](https://github.com/lcdyk0517/joymux-fix) website for instructions on generating new `dtb` files
-with custom controller axis mappings.
+Visit
+ 👉 **https://lcdyk0517.github.io/tools/dtb-tools.html**
+
+to adjust joystick axis mappings (Joymux / amux), battery parameters, and generate new `dtb` files directly in the browser.
+
+**Important:** Only DTB files from **ArkOS4Clone** are supported.
+ DTBs from stock systems or other distributions will not work.
 
 ## Known Limitations
 
