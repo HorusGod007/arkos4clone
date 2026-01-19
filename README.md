@@ -30,6 +30,9 @@ Currently, I can only maintain the devices I personally own, but contributions a
 |                      | **Clone Type 5**                         | `logo/480P/`, `kernel/common/`, `consoles/clone type5/` |
 | **GameConsole**      | **GameConsole R46H**                    | `logo/768P/`, `kernel/common/`, `consoles/r46h/`        |
 |                      | **GameConsole R40XX**                    | `logo/768P/`, `kernel/common/`, `consoles/r40xx/`        |
+|                      | **GameConsole R40XX ProMax**                    | `logo/768P/`, `kernel/common/`, `consoles/r46h/`        |
+|                      | **GameConsole R45H**                    | `logo/768P/`, `kernel/common/`, `consoles/r45h/`        |
+|                      | **GameConsole R36H ProMax**                    | `logo/768P/`, `kernel/common/`, `consoles/r45h/`        |
 |                      | **GameConsole R36sPlus**                | `logo/720P/`, `kernel/common/`, `consoles/r36splus/`    |
 |                      | **GameConsole R36s Panel 0**            | `logo/480P/`, `kernel/common/`, `consoles/origin panel0/` |
 |                      | **GameConsole R36s Panel 1**            | `logo/480P/`, `kernel/common/`, `consoles/origin panel1/` |

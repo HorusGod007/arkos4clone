@@ -1,1 +1,8 @@
 .DS_Store
+PortMaster/*
+mod_so/*
+/*.txt
+res/*
+replace_file/modules
+update.tar
+/*.gz

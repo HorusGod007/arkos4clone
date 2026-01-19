@@ -134,13 +134,22 @@ var Consoles = []ConsoleConfig{
 		RealName: "r46h",
 		BrandEntries: []BrandEntry{
 			{Brand: "GameConsole", DisplayName: "GameConsole R46H"},
+			{Brand: "GameConsole", DisplayName: "GameConsole R40XX ProMax"},
 		},
 		ExtraSources: []string{"logo/768p/", "kernel/common/"},
 	},
 	{
 		RealName: "r40xx",
 		BrandEntries: []BrandEntry{
-			{Brand: "GameConsole", DisplayName: "GameConsole R40xx"},
+			{Brand: "GameConsole", DisplayName: "GameConsole R40XX"},
+		},
+		ExtraSources: []string{"logo/768p/", "kernel/common/"},
+	},
+	{
+		RealName: "r45h",
+		BrandEntries: []BrandEntry{
+			{Brand: "GameConsole", DisplayName: "GameConsole R45H"},
+			{Brand: "GameConsole", DisplayName: "GameConsole R36H ProMax"},
 		},
 		ExtraSources: []string{"logo/768p/", "kernel/common/"},
 	},
