@@ -22,7 +22,6 @@ maybe_apply_ota_update() {
   local tmpdir="/home/ark/.ota_update"
   local TTY="/dev/tty1"
 
-  # 优先 roms，其次 roms2
   if [[ -f "/roms/update.tar" ]]; then
     tar_path="/roms/update.tar"
   elif [[ -f "/roms2/update.tar" ]]; then
@@ -33,14 +32,9 @@ maybe_apply_ota_update() {
 
   msg "OTA package found: $tar_path"
 
-  # 准备 OTA 目录
   sudo rm -rf "$tmpdir" 2>/dev/null || true
-  sudo mkdir -p "$tmpdir" || {
-    err "Failed to create OTA dir: $tmpdir"
-    return 0
-  }
+  sudo mkdir -p "$tmpdir" || { err "Failed to create OTA dir: $tmpdir"; return 0; }
 
-  # ===== 显示 OTA 头 =====
   {
     printf '\033c' 2>/dev/null || true
     echo "==============================="
@@ -60,10 +54,10 @@ maybe_apply_ota_update() {
 
   msg "OTA extracting minimal to: $tmpdir"
 
-  # ===== 只解压最小文件：VERSION + install.sh + CHUNKS =====
+  # 只解最小：VERSION + install.sh + CHUNKS + META
   if tar --help 2>/dev/null | grep -q -- '--checkpoint'; then
     if ! sudo tar -xf "$tar_path" -C "$tmpdir" \
-        VERSION install.sh CHUNKS \
+        VERSION install.sh CHUNKS META \
         --checkpoint=200 \
         --checkpoint-action=exec='sh -c "echo \"[OTA] extracting... ($TAR_CHECKPOINT files)\""' \
         2>&1 | tee -a "$LOG_FILE" > "$TTY"; then
@@ -75,7 +69,7 @@ maybe_apply_ota_update() {
   else
     echo "[OTA] extracting... please wait." > "$TTY"
     if ! sudo tar -xf "$tar_path" -C "$tmpdir" \
-         VERSION install.sh CHUNKS \
+         VERSION install.sh CHUNKS META \
          2>&1 | tee -a "$LOG_FILE" >> "$TTY"; then
       err "OTA extract failed"
       echo "[OTA] Extract FAILED. See $LOG_FILE" > "$TTY"
@@ -92,18 +86,11 @@ maybe_apply_ota_update() {
     echo
   } > "$TTY"
 
-  # ===== 执行 install.sh =====
-  if [[ ! -f "$tmpdir/install.sh" ]]; then
-    err "install.sh not found in OTA"
-    echo "[OTA] install.sh NOT FOUND" > "$TTY"
-    sudo rm -rf "$tmpdir" 2>/dev/null || true
-    return 0
-  fi
+  [[ -f "$tmpdir/install.sh" ]] || { err "install.sh not found"; echo "[OTA] install.sh NOT FOUND" > "$TTY"; sudo rm -rf "$tmpdir" 2>/dev/null || true; return 0; }
 
   sudo chmod +x "$tmpdir/install.sh" 2>/dev/null || true
 
-  # 关键：把外层 update.tar 路径传给 install.sh，让它从 update.tar 流式抽取 chunks/ 与 uboot/
-  if ! sudo env OTA_TAR_PATH="$tar_path" bash "$tmpdir/install.sh" \
+  if ! sudo env OTA_TAR_PATH="$tar_path" LOG_FILE="$LOG_FILE" bash "$tmpdir/install.sh" \
        2>&1 | tee -a "$LOG_FILE" >> "$TTY"; then
     err "OTA install failed"
     echo "[OTA] Install FAILED. See $LOG_FILE" >> "$TTY"
@@ -111,7 +98,6 @@ maybe_apply_ota_update() {
     return 0
   fi
 
-  # ===== 成功收尾 =====
   sudo rm -f "$tar_path" 2>/dev/null || true
   sudo rm -rf "$tmpdir" 2>/dev/null || true
   sudo rm -rf /boot/.console 2>/dev/null || true
@@ -127,7 +113,7 @@ maybe_apply_ota_update() {
     done
   } >> "$TTY"
 
-  msg "OTA applied successfully, rebooting"
+  msg "OTA applied successfully, powering off"
   sleep 2
   poweroff -f || true
   exit 0

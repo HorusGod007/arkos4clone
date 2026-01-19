@@ -40,15 +40,25 @@ sudo chown -R 1002:1002 "$MOUNT_DIR/root/opt/system/Clone"
 sudo chmod -R 755 "$MOUNT_DIR/root/opt/system/Clone"
 sudo chmod 755 "$MOUNT_DIR/root/usr/bin/mcu_led" "$MOUNT_DIR/root/usr/bin/ws2812" "$MOUNT_DIR/root/usr/local/bin/sdljoytest" "$MOUNT_DIR/root/usr/local/bin/sdljoymap"
 
+echo "== 替换 modules (root) =="
+SRC="./replace_file/modules"
+DST="$MOUNT_DIR/root/usr/lib/modules"
+if [[ -d "$SRC" ]]; then
+  sudo mkdir -p "$DST"
+  sudo rsync -a --delete "$SRC/" "$DST/"
+else
+  echo "[warn] $SRC not found, skip modules update"
+fi
+sudo depmod -a -b "$MOUNT_DIR/root" 4.4.189 2>/dev/null || true
+
 echo "== 注入 915 驱动 =="
 sudo mkdir -p "$MOUNT_DIR/root/usr/lib/firmware" \
              "$MOUNT_DIR/root/usr/lib/modules/4.4.189/kernel/drivers/net/wireless"
 # 通配符不存在会让 cp 失败，加 || true 容错
-sudo cp -f ./bin/mt7610u_sta.ko "$MOUNT_DIR/root/usr/lib/modules/4.4.189/kernel/drivers/net/wireless/mediatek/" 2>/dev/null || true
 sudo cp -f ./bin/rk915_*.bin "$MOUNT_DIR/root/usr/lib/firmware/" 2>/dev/null || true
 sudo mkdir -p "$MOUNT_DIR/root/usr/lib/modules/4.4.189/kernel/drivers/net/wireless/rockchip_wlan/rk915"
 sudo cp -f ./bin/rk915.ko "$MOUNT_DIR/root/usr/lib/modules/4.4.189/kernel/drivers/net/wireless/rockchip_wlan/rk915/" 2>/dev/null || true
-sudo chmod 755 "$MOUNT_DIR/root/usr/lib/modules/4.4.189/kernel/drivers/net/wireless/rk915.ko" 2>/dev/null || true
+sudo chmod 644 "$MOUNT_DIR/root/usr/lib/modules/4.4.189/kernel/drivers/net/wireless/rockchip_wlan/rk915/rk915.ko" 2>/dev/null || true
 sudo chmod 755 "$MOUNT_DIR/root/usr/lib/firmware/"rk915_*.bin 2>/dev/null || true
 
 echo "== 注入 351Files 资源 =="
@@ -85,9 +95,9 @@ echo "== 注入 adc-key 服务脚本 =="
 sudo cp -f ./bin/adc-key/adckeys.py "$MOUNT_DIR/root/usr/local/bin/"
 sudo cp -f ./bin/adc-key/adckeys.sh "$MOUNT_DIR/root/usr/local/bin/"
 sudo cp -f ./bin/adc-key/adckeys.service "$MOUNT_DIR/root/etc/systemd/system/"
-sudo chmod 777 "$MOUNT_DIR/usr/local/bin/adckeys.py" 2>/dev/null || true
-sudo chmod 777 "$MOUNT_DIR/usr/local/bin/adckeys.sh" 2>/dev/null || true
-sudo chmod 644 "$MOUNT_DIR/etc/systemd/system/adckeys.service" 2>/dev/null || true
+sudo chmod 777 "$MOUNT_DIR/root/usr/local/bin/adckeys.py" 2>/dev/null || true
+sudo chmod 777 "$MOUNT_DIR/root/usr/local/bin/adckeys.sh" 2>/dev/null || true
+sudo chmod 644 "$MOUNT_DIR/root/etc/systemd/system/adckeys.service" 2>/dev/null || true
 
 
 echo "== 注入核心 =="
@@ -126,6 +136,7 @@ if [ "$(stat -c%s $MOUNT_DIR/root/roms.tar 2>/dev/null || echo 0)" -le $((100*10
   mv /home/lcdyk/arkos/tmproms/roms/j2me/zulu11.48.21-ca-jdk11.0.11-linux_aarch64 /home/lcdyk/arkos/tmproms/roms/j2me/jdk
   sudo chown -R root:root /home/lcdyk/arkos/tmproms/roms/j2me/jdk
   echo "== 注入 portmaster =="
+  mkdir -p /home/lcdyk/arkos/tmproms/roms/tools/PortMaster/
   sudo cp -rf ./PortMaster/* "/home/lcdyk/arkos/tmproms/roms/tools/PortMaster/"
   sudo cp -rf ./PortMaster/PortMaster.sh "/home/lcdyk/arkos/tmproms/roms/tools/PortMaster.sh"
   mkdir -p /home/lcdyk/arkos/tmproms/roms/pymo
