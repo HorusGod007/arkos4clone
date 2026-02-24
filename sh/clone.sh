@@ -599,18 +599,6 @@ fi
 # 加载驱动
 sudo depmod -a || true
 
-# 安装 915 wifi 驱动
-if [[ -f "$CONSOLE_FILE" ]]; then
-  cur_console="$(get_console_label)"
-  for x in "${rk915_set[@]}"; do
-    if [[ "$cur_console" == "$x" ]]; then
-      msg "insmod rk915.ko: $cur_console"
-      sudo modprobe -v rk915 || true
-      break
-    fi
-  done
-fi
-
 # ws2812 摇杆灯控制加载 spi 模块
 if [[ -f "$CONSOLE_FILE" ]]; then
   cur_console="$(get_console_label)"
@@ -622,8 +610,6 @@ if [[ -f "$CONSOLE_FILE" ]]; then
     fi
   done
 fi
-
-# sudo modprobe -v mt7610u_sta || true
 
 # 开机将音频设置为 SPK 如果是 OFF 的话
 STATE="$(
@@ -637,6 +623,8 @@ if [[ "$STATE" = "OFF" || "$STATE" = "HP" ]]; then
 else
   echo "Playback Path is already set to ${STATE:-UNKNOWN}, no change."
 fi
+
+cp_if_exists "$QUIRKS_DIR/.asoundrc"     "/home/ark/.asoundrc"       "yes"
 
 # D007: 动态启用 / 禁用 adckeys.service
 if [[ -f "$CONSOLE_FILE" ]]; then

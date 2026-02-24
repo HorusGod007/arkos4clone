@@ -51,15 +51,14 @@ else
 fi
 sudo depmod -a -b "$MOUNT_DIR/root" 4.4.189 2>/dev/null || true
 
-echo "== 注入 915 驱动 =="
-sudo mkdir -p "$MOUNT_DIR/root/usr/lib/firmware" \
-             "$MOUNT_DIR/root/usr/lib/modules/4.4.189/kernel/drivers/net/wireless"
+echo "== 注入 915 固件 =="
 # 通配符不存在会让 cp 失败，加 || true 容错
 sudo cp -f ./bin/rk915_*.bin "$MOUNT_DIR/root/usr/lib/firmware/" 2>/dev/null || true
-sudo mkdir -p "$MOUNT_DIR/root/usr/lib/modules/4.4.189/kernel/drivers/net/wireless/rockchip_wlan/rk915"
-sudo cp -f ./bin/rk915.ko "$MOUNT_DIR/root/usr/lib/modules/4.4.189/kernel/drivers/net/wireless/rockchip_wlan/rk915/" 2>/dev/null || true
-sudo chmod 644 "$MOUNT_DIR/root/usr/lib/modules/4.4.189/kernel/drivers/net/wireless/rockchip_wlan/rk915/rk915.ko" 2>/dev/null || true
 sudo chmod 755 "$MOUNT_DIR/root/usr/lib/firmware/"rk915_*.bin 2>/dev/null || true
+
+echo "== 注入 aic8800DC 固件 =="
+sudo mkdir -p "$MOUNT_DIR/root/usr/lib/firmware/aic8800DC"
+sudo cp -f ./bin/aic8800DC/* "$MOUNT_DIR/root/usr/lib/firmware/aic8800DC/" 2>/dev/null || true
 
 echo "== 注入 351Files 资源 =="
 sudo mkdir -p "$MOUNT_DIR/root/opt/351Files/res"
