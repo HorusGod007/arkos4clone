@@ -201,6 +201,17 @@ sudo rm -rf "$MOUNT_DIR/root/opt/system/Advanced/Screen - Switch to Original Scr
 sudo rm -rf "$MOUNT_DIR/root/opt/system/Advanced/Reset EmulationStation Controls.sh" 2>/dev/null || true
 sudo rm -rf "$MOUNT_DIR/root/opt/system/Advanced/Fix Global Hotkeys.sh" 2>/dev/null || true
 
+sudo cp -r "./Jason3_Scripte/wifi-toggle/Wifi-toggle.sh" "$MOUNT_DIR/root/opt/system/"
+sudo cp -r "./Jason3_Scripte/InfoSystem/InfoSystem.sh" "$MOUNT_DIR/root/opt/system/Tools/"
+sudo cp -r "./Jason3_Scripte/GhostLoader/GhostLoader.sh" "$MOUNT_DIR/root/opt/system/Tools/"
+sudo cp -r "./Jason3_Scripte/Bluetooth-Manager/Bluetooth Manager.sh" "$MOUNT_DIR/root/opt/system/Tools/"
+sudo cp -r "./Jason3_Scripte/Bluetooth-Manager/patch.pak" "$MOUNT_DIR/root/opt/system/Tools/"
+
+sudo chmod +x "$MOUNT_DIR/root/opt/system/"*.sh
+sudo chmod +x "$MOUNT_DIR/root/opt/system/Tools/"*.sh
+sudo chmod +x "$MOUNT_DIR/root/opt/system/Clone/"*.sh
+sudo chmod +x "$MOUNT_DIR/root/opt/system/Advanced/"*.sh
+
 sudo touch $MOUNT_DIR/boot/"USE_DTB_SELECT_TO_SELECT_DEVICE" 2>/dev/null || true
 cat $MOUNT_DIR/root/usr/share/plymouth/themes/text.plymouth
 echo "== 完成 =="
