@@ -479,6 +479,10 @@ apply_es_input() {
   cp_if_exists "$QUIRKS_DIR/retroarch64.cfg" "/home/ark/.config/retroarch/retroarch.cfg" "yes"
   cp_if_exists "$QUIRKS_DIR/retroarch32.cfg" "/home/ark/.config/retroarch32/retroarch.cfg" "yes"
   cp_if_exists "$QUIRKS_DIR/es_input.cfg" "/etc/emulationstation/es_input.cfg" "yes"
+  sed -i -e '/menu_driver \= \"/c\menu_driver \= \"ozone\"' /home/ark/.config/retroarch32/retroarch.cfg        || true
+  sed -i -e '/menu_driver \= \"/c\menu_driver \= \"ozone\"' /home/ark/.config/retroarch/retroarch.cfg          || true
+  sed -i -e '/menu_driver \= \"/c\menu_driver \= \"ozone\"' /home/ark/.config/retroarch32/retroarch.cfg.bak    || true
+  sed -i -e '/menu_driver \= \"/c\menu_driver \= \"ozone\"' /home/ark/.config/retroarch/retroarch.cfg.bak      || true
 }
 
 apply_rotate_file() {
@@ -670,12 +674,33 @@ if [[ -f "/boot/.cn" ]]; then
   sed -i -e '/user_language \= \"/c\user_language \= \"12\"' /home/ark/.config/retroarch32/retroarch.cfg.bak    || true
   sed -i -e '/user_language \= \"/c\user_language \= \"12\"' /home/ark/.config/retroarch/retroarch.cfg.bak      || true
 
-  sed -i -e '/menu_driver \= \"/c\menu_driver \= \"ozone\"' /home/ark/.config/retroarch32/retroarch.cfg        || true
-  sed -i -e '/menu_driver \= \"/c\menu_driver \= \"ozone\"' /home/ark/.config/retroarch/retroarch.cfg          || true
-  sed -i -e '/menu_driver \= \"/c\menu_driver \= \"ozone\"' /home/ark/.config/retroarch32/retroarch.cfg.bak    || true
-  sed -i -e '/menu_driver \= \"/c\menu_driver \= \"ozone\"' /home/ark/.config/retroarch/retroarch.cfg.bak      || true
-
   sudo rm -f /boot/.cn || true
+
+elif [[ -f "/boot/.ko" ]]; then
+    msg "Apply first-boot ko localization"
+  if grep -q "Language" /home/ark/.emulationstation/es_settings.cfg; then
+    sed -i -e '/<string name\=\"Language/c\<string name\=\"Language\" value\=\"ko\" \/>' /home/ark/.emulationstation/es_settings.cfg || true
+  else
+    sed -i '$a <string name\=\"Language\" value\=\"ko\" \/>' /home/ark/.emulationstation/es_settings.cfg || true
+  fi
+
+  sudo rm -f /etc/localtime || true
+  sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime || true
+
+  sudo sed -i -e '/Language \= en_US/c\Language \= ko_KR' /opt/ppsspp/backupforromsfolder/ppsspp/PSP/SYSTEM/ppsspp.ini      || true
+  sudo sed -i -e '/Language \= en_US/c\Language \= ko_KR' /opt/ppsspp/backupforromsfolder/ppsspp/PSP/SYSTEM/ppsspp.ini.go   || true
+  sudo sed -i -e '/Language \= en_US/c\Language \= ko_KR' /opt/ppsspp/backupforromsfolder/ppsspp/PSP/SYSTEM/ppsspp.ini.sdl  || true
+
+  sed -i -e '/Language \= en_US/c\Language \= ko_KR' /roms/psp/ppsspp/PSP/SYSTEM/ppsspp.ini      || true
+  sed -i -e '/Language \= en_US/c\Language \= ko_KR' /roms/psp/ppsspp/PSP/SYSTEM/ppsspp.ini.go   || true
+  sed -i -e '/Language \= en_US/c\Language \= ko_KR' /roms/psp/ppsspp/PSP/SYSTEM/ppsspp.ini.sdl  || true
+
+  sed -i -e '/user_language \= \"/c\user_language \= \"10\"' /home/ark/.config/retroarch32/retroarch.cfg        || true
+  sed -i -e '/user_language \= \"/c\user_language \= \"10\"' /home/ark/.config/retroarch/retroarch.cfg          || true
+  sed -i -e '/user_language \= \"/c\user_language \= \"10\"' /home/ark/.config/retroarch32/retroarch.cfg.bak    || true
+  sed -i -e '/user_language \= \"/c\user_language \= \"10\"' /home/ark/.config/retroarch/retroarch.cfg.bak      || true
+
+  sudo rm -f /boot/.ko || true
 fi
 
 if [[ -x /home/ark/.config/lastgame.sh ]]; then
