@@ -32,13 +32,14 @@ sudo cp -f ./sh/joyled.sh "$MOUNT_DIR/root/opt/system/Clone/"
 sudo cp -f ./sh/sdljoytest.sh "$MOUNT_DIR/root/opt/system/Clone/"
 sudo cp -f ./bin/mcu_led ./bin/ws2812 "$MOUNT_DIR/root/usr/bin/"
 sudo cp -f ./bin/sdljoymap  ./bin/sdljoytest "$MOUNT_DIR/root/usr/local/bin/"
+sudo cp -f ./bin/console_detect "$MOUNT_DIR/root/usr/local/bin/"
 sudo chown -f 1002:1002 "$MOUNT_DIR/root/usr/bin/ws2812" || true
 sudo chown -f 1002:1002 "$MOUNT_DIR/root/usr/bin/mcu_led" || true
 sudo chown -f 1002:1002 "$MOUNT_DIR/root/usr/local/bin/sdljoytest" || true
 sudo chown -f 1002:1002 "$MOUNT_DIR/root/usr/local/bin/sdljoymap" || true
 sudo chown -R 1002:1002 "$MOUNT_DIR/root/opt/system/Clone"
 sudo chmod -R 755 "$MOUNT_DIR/root/opt/system/Clone"
-sudo chmod 755 "$MOUNT_DIR/root/usr/bin/mcu_led" "$MOUNT_DIR/root/usr/bin/ws2812" "$MOUNT_DIR/root/usr/local/bin/sdljoytest" "$MOUNT_DIR/root/usr/local/bin/sdljoymap"
+sudo chmod 755 "$MOUNT_DIR/root/usr/bin/mcu_led" "$MOUNT_DIR/root/usr/bin/ws2812" "$MOUNT_DIR/root/usr/local/bin/sdljoytest" "$MOUNT_DIR/root/usr/local/bin/sdljoymap" "$MOUNT_DIR/root/usr/local/bin/console_detect"
 
 echo "== 替换 modules (root) =="
 SRC="./replace_file/modules"
@@ -131,7 +132,7 @@ sudo chmod -R 775 "$MOUNT_DIR/root/opt/drastic" 2>/dev/null || true
 
 echo "== 添加drastic-kk =="
 sudo mkdir -p "$MOUNT_DIR/root/opt/drastic-kk" 2>/dev/null || true
-sudo cp -a ./replace_file/drastic-kk/. "$MOUNT_DIR/root/opt/drastic/" 2>/dev/null || true
+sudo cp -a ./replace_file/drastic-kk/. "$MOUNT_DIR/root/opt/drastic-kk/" 2>/dev/null || true
 sudo rm -rf "$MOUNT_DIR/root/opt/drastic-kk/patch" 2>/dev/null || true
 sudo chown -R 1002:1002 "$MOUNT_DIR/root/opt/drastic-kk" 2>/dev/null || true
 sudo chmod -R 775 "$MOUNT_DIR/root/opt/drastic-kk" 2>/dev/null || true
@@ -214,9 +215,9 @@ sudo rm -rf "$MOUNT_DIR/root/opt/system/Advanced/Screen - Switch to Original Scr
 sudo rm -rf "$MOUNT_DIR/root/opt/system/Advanced/Reset EmulationStation Controls.sh" 2>/dev/null || true
 sudo rm -rf "$MOUNT_DIR/root/opt/system/Advanced/Fix Global Hotkeys.sh" 2>/dev/null || true
 
-sudo cp -r "./Jason3_Scripte/wifi-toggle/Wifi-toggle.sh" "$MOUNT_DIR/root/opt/system/"
-sudo cp -r "./Jason3_Scripte/InfoSystem/InfoSystem.sh" "$MOUNT_DIR/root/opt/system/Tools/"
-sudo cp -r "./Jason3_Scripte/GhostLoader/GhostLoader.sh" "$MOUNT_DIR/root/opt/system/Tools/"
+sudo cp -r "./Jason3_Scripte/wifi-toggle/Wifi-toggle.sh" "$MOUNT_DIR/root/opt/system/Wifi-Toggle.sh"
+sudo cp -r "./Jason3_Scripte/InfoSystem/InfoSystem.sh" "$MOUNT_DIR/root/opt/system/Tools/System Info.sh"
+sudo cp -r "./Jason3_Scripte/GhostLoader/GhostLoader.sh" "$MOUNT_DIR/root/opt/system/Tools/Ghost Loader.sh"
 sudo cp -r "./Jason3_Scripte/Bluetooth-Manager/Bluetooth Manager.sh" "$MOUNT_DIR/root/opt/system/Tools/"
 sudo cp -r "./Jason3_Scripte/Bluetooth-Manager/patch.pak" "$MOUNT_DIR/root/opt/system/Tools/"
 

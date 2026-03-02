@@ -73,6 +73,7 @@ echo "== 构建 payload/boot =="
 
 # consoles -> /boot/consoles（排除 consoles/files）
 mkdir -p "$PAYLOAD_BOOT/consoles"
+# shellcheck disable=SC2086
 rsync $RSYNC_BOOT_OPTS --exclude='files' ./consoles/ "$PAYLOAD_BOOT/consoles/"
 
 # clone.sh 在 OTA 中必须直接生成为 /boot/firstboot.sh
@@ -81,7 +82,6 @@ cp -f ./sh/clone.sh "$PAYLOAD_BOOT/firstboot.sh"
 # 其他 boot 工具保持原文件名
 cp -f ./dtb_selector_macos \
       ./dtb_selector_win32.exe \
-      ./sh/expandtoexfat.sh \
       "$PAYLOAD_BOOT/" 2>/dev/null || true
 
 # DTB 选择器提示标记文件
@@ -101,16 +101,14 @@ cp -f ./sh/joyled.sh "$PAYLOAD_ROOT/opt/system/Clone/" 2>/dev/null || true
 cp -f ./sh/sdljoytest.sh "$PAYLOAD_ROOT/opt/system/Clone/" 2>/dev/null || true
 cp -f ./bin/mcu_led ./bin/ws2812 "$PAYLOAD_ROOT/usr/bin/" 2>/dev/null || true
 cp -f ./bin/sdljoymap ./bin/sdljoytest "$PAYLOAD_ROOT/usr/local/bin/" 2>/dev/null || true
+cp -f ./bin/console_detect "$PAYLOAD_ROOT/usr/local/bin/" 2>/dev/null || true
 
-echo "== 注入 rk915 驱动与固件 =="
-mkdir -p "$PAYLOAD_ROOT/usr/lib/firmware" \
-         "$PAYLOAD_ROOT/usr/lib/modules/4.4.189/kernel/drivers/net/wireless/mediatek" \
-         "$PAYLOAD_ROOT/usr/lib/modules/4.4.189/kernel/drivers/net/wireless/rockchip_wlan/rk915"
-cp -f ./bin/mt7610u_sta.ko \
-      "$PAYLOAD_ROOT/usr/lib/modules/4.4.189/kernel/drivers/net/wireless/mediatek/" 2>/dev/null || true
+echo "== 注入 rk915 固件 =="
 cp -f ./bin/rk915_*.bin "$PAYLOAD_ROOT/usr/lib/firmware/" 2>/dev/null || true
-cp -f ./bin/rk915.ko \
-      "$PAYLOAD_ROOT/usr/lib/modules/4.4.189/kernel/drivers/net/wireless/rockchip_wlan/rk915/" 2>/dev/null || true
+
+echo "== 注入 aic8800DC 固件 =="
+mkdir -p "$PAYLOAD_ROOT/usr/lib/firmware/aic8800DC"
+cp -f ./bin/aic8800DC/* "$PAYLOAD_ROOT/usr/lib/firmware/aic8800DC/" 2>/dev/null || true
 
 echo "== 注入 351Files 资源 =="
 mkdir -p "$PAYLOAD_ROOT/opt/351Files/res"
@@ -148,10 +146,13 @@ mkdir -p "$PAYLOAD_ROOT/opt/drastic"
 cp -a ./replace_file/drastic/. "$PAYLOAD_ROOT/opt/drastic/" 2>/dev/null || true
 rm -rf "$PAYLOAD_ROOT/opt/drastic/patch" 2>/dev/null || true
 
-# NDS Overlay
-mkdir -p "$PAYLOAD_ROOT/opt/system/Advanced/NDS Overlays"
-cp -a ./replace_file/nds_sh/* \
-      "$PAYLOAD_ROOT/opt/system/Advanced/NDS Overlays/" 2>/dev/null || true
+echo "== 注入 drastic-kk =="
+mkdir -p "$PAYLOAD_ROOT/opt/drastic-kk"
+cp -a ./replace_file/drastic-kk/. "$PAYLOAD_ROOT/opt/drastic-kk/" 2>/dev/null || true
+rm -rf "$PAYLOAD_ROOT/opt/drastic-kk/patch" 2>/dev/null || true
+
+echo "== 注入 json-c3 库（drastic-kk 依赖） =="
+cp -f ./bin/json-c3/* "$PAYLOAD_ROOT/usr/lib/aarch64-linux-gnu/" 2>/dev/null || true
 
 echo "== 注入 retrorun =="
 mkdir -p "$PAYLOAD_ROOT/usr/local/bin"
@@ -196,6 +197,14 @@ if [[ -d "./replace_file/modules" ]]; then
   cp -a ./replace_file/modules/. "$PAYLOAD_ROOT/usr/lib/modules/" 2>/dev/null || true
 fi
 
+echo "== 注入 Jason3_Scripte 工具 =="
+mkdir -p "$PAYLOAD_ROOT/opt/system/Tools"
+cp -r "./Jason3_Scripte/wifi-toggle/Wifi-toggle.sh" "$PAYLOAD_ROOT/opt/system/Wifi-Toggle.sh" 2>/dev/null || true
+cp -r "./Jason3_Scripte/InfoSystem/InfoSystem.sh" "$PAYLOAD_ROOT/opt/system/Tools/System Info.sh" 2>/dev/null || true
+cp -r "./Jason3_Scripte/GhostLoader/GhostLoader.sh" "$PAYLOAD_ROOT/opt/system/Tools/Ghost Loader.sh" 2>/dev/null || true
+cp -r "./Jason3_Scripte/Bluetooth-Manager/Bluetooth Manager.sh" "$PAYLOAD_ROOT/opt/system/Tools/" 2>/dev/null || true
+cp -r "./Jason3_Scripte/Bluetooth-Manager/patch.pak" "$PAYLOAD_ROOT/opt/system/Tools/" 2>/dev/null || true
+
 # ========= ROMS.TAR 被明确排除（OTA 不处理用户数据） =========
 echo "== 跳过 roms.tar（设计如此） =="
 
@@ -223,17 +232,17 @@ meta_add "0755" "1002:1002" "/usr/bin/mcu_led"
 meta_add "0755" "1002:1002" "/usr/bin/ws2812"
 meta_add "0755" "1002:1002" "/usr/local/bin/sdljoytest"
 meta_add "0755" "1002:1002" "/usr/local/bin/sdljoymap"
+meta_add "0755" "1002:1002" "/usr/local/bin/console_detect"
 
-# rk915：ko 644；固件 755（按你离线脚本）
-meta_add "0644" "0:0" "/usr/lib/modules/4.4.189/kernel/drivers/net/wireless/rockchip_wlan/rk915/rk915.ko"
+# rk915 固件 755
 meta_add "0755" "0:0" "/usr/lib/firmware/rk915_*.bin"
 
 # 351Files：chown + 755（并会在 install.sh 做 351Files -> old 的重命名）
 meta_add "0755" "1002:1002" "/opt/351Files"
 meta_add "0755" "1002:1002" "/opt/351Files/*"
 
-# replace_file/*.sh 中那 6 个：root:root + 777
-for f in atomiswave.sh dreamcast.sh naomi.sh saturn.sh n64.sh pico8.sh; do
+# replace_file/*.sh 中那 9 个：root:root + 777
+for f in atomiswave.sh dreamcast.sh naomi.sh saturn.sh n64.sh pico8.sh drastic.sh drastic_kk.sh choose_drastic_ver.sh; do
   meta_add "0777" "0:0" "/usr/local/bin/$f"
 done
 
@@ -254,9 +263,24 @@ meta_add "0777" "1002:1002" "/etc/emulationstation/es_systems.cfg.dual"
 meta_add "0775" "1002:1002" "/opt/drastic"
 meta_add "0775" "1002:1002" "/opt/drastic/*"
 
+# drastic-kk：1002:1002 + 775
+meta_add "0775" "1002:1002" "/opt/drastic-kk"
+meta_add "0775" "1002:1002" "/opt/drastic-kk/*"
+
+# json-c3 库：root:root
+meta_add "----" "0:0" "/usr/lib/aarch64-linux-gnu/libjson-c.so*"
+
 # pymo：777（离线脚本是 777）
 meta_add "0777" "0:0" "/usr/local/bin/cpymo"
 meta_add "0777" "0:0" "/usr/local/bin/pymo.sh"
+
+# Jason3_Scripte 工具：可执行
+meta_add "0755" "0:0" "/opt/system/Wifi-Toggle.sh"
+meta_add "0755" "0:0" "/opt/system/Tools/*.sh"
+meta_add "0755" "0:0" "/opt/system/Tools/patch.pak"
+
+# /opt/system 下脚本权限
+meta_add "0755" "0:0" "/opt/system/Advanced/*.sh"
 
 # 临时修复：mediaplayer 777（按你旧脚本）
 meta_add "0777" "0:0" "/usr/local/bin/mediaplayer.sh"
@@ -277,47 +301,90 @@ OTA_TAR_PATH="${OTA_TAR_PATH:-}"
 CHUNKS_FILE="$BASE/CHUNKS"
 META_FILE="$BASE/META"
 LOG_FILE="${LOG_FILE:-/boot/clone_log.txt}"
+OTA_LOG="/roms/update.log"
+
+# 日志函数：同时输出到控制台和日志文件
+log() {
+  local ts; ts="$(date '+%Y-%m-%d %H:%M:%S')"
+  echo "[$ts] $*" | tee -a "$OTA_LOG" | tee -a "$LOG_FILE"
+}
+log_cmd() {
+  log "[CMD] $*"
+  "$@" 2>&1 | tee -a "$OTA_LOG" | tee -a "$LOG_FILE" || return $?
+}
+log_result() {
+  local rc=$?
+  if [[ $rc -eq 0 ]]; then
+    log "[OK] $*"
+  else
+    log "[FAIL] $* (rc=$rc)"
+  fi
+  return $rc
+}
+
+# 初始化日志
+: > "$OTA_LOG" 2>/dev/null || true
+log "========== OTA Update Start =========="
+log "OTA_TAR_PATH: $OTA_TAR_PATH"
+log "BASE: $BASE"
+log "VERSION: $(cat "$BASE/VERSION" 2>/dev/null || echo 'unknown')"
 
 have_systemctl() { command -v systemctl >/dev/null 2>&1; }
 
 svc_stop_disable() {
   local svc="$1"
   have_systemctl || return 0
+  log "Stopping service: $svc"
   systemctl stop "$svc" 2>/dev/null || true
   systemctl disable "$svc" 2>/dev/null || true
   systemctl reset-failed "$svc" 2>/dev/null || true
 }
 
 # 先停掉可能冲突/要替换的服务（存在才动）
+log "=== Step 1: Stop conflicting services ==="
 for s in adckeys.service batt_led.service ddtbcheck.service 351mp.service mpv.service; do
   if [[ -e "/etc/systemd/system/$s" || -e "/lib/systemd/system/$s" ]]; then
     svc_stop_disable "$s"
   fi
 done
 
+log "=== Step 2: Find boot partition ==="
 # 查找 boot 分区挂载点
 BOOT_MP="$(findmnt -n -o TARGET /dev/mmcblk0p1 2>/dev/null || true)"
 [[ -z "$BOOT_MP" ]] && BOOT_MP="/boot"
+log "Boot mount point: $BOOT_MP"
 
 # ====== 保持原有清理（不改权限，只删文件）======
+log "=== Step 3: Cleanup before apply ==="
 cleanup_before_apply() {
+  log "Cleaning: $BOOT_MP/consoles"
   rm -rf "$BOOT_MP/consoles" 2>/dev/null || true
+  log "Cleaning: $BOOT_MP/dtb_selector.exe"
   rm -f  "$BOOT_MP/dtb_selector.exe" 2>/dev/null || true
+  log "Cleaning: /opt/system/Clone"
   rm -rf "/opt/system/Clone" 2>/dev/null || true
+  log "Cleaning: /opt/drastic"
+  rm -rf "/opt/drastic" 2>/dev/null || true
+  log "Cleaning: /opt/drastic-kk"
+  rm -rf "/opt/drastic-kk" 2>/dev/null || true
 }
 cleanup_before_apply
 
 # 你要求的 boot 清理（与离线一致）
+log "Cleaning boot files..."
 rm -rf "$BOOT_MP/BMPs" "$BOOT_MP/ScreenFiles" 2>/dev/null || true
 rm -f  "$BOOT_MP/boot.ini" "$BOOT_MP"/*.dtb "$BOOT_MP"/*.orig "$BOOT_MP"/*.tony \
       "$BOOT_MP/Image" "$BOOT_MP"/*.bmp "$BOOT_MP/WHERE_ARE_MY_ROMS.txt" 2>/dev/null || true
 rm -f  "$BOOT_MP/DTB Change Tool.exe" 2>/dev/null || true
 
+log "Remounting boot as rw"
 mount -o remount,rw "$BOOT_MP" 2>/dev/null || true
 
 # ====== (新增) 只对 META 列出的文件修正权限/属主 ======
 apply_meta() {
-  [[ -f "$META_FILE" ]] || return 0
+  local count=0
+  [[ -f "$META_FILE" ]] || { log "META file not found"; return 0; }
+  log "Applying META permissions..."
   while read -r mode ug path; do
     [[ -z "${mode:-}" || -z "${ug:-}" || -z "${path:-}" ]] && continue
     [[ "${mode:0:1}" == "#" ]] && continue
@@ -328,8 +395,10 @@ apply_meta() {
       if [[ "$mode" != "----" ]]; then
         chmod "$mode" "$p" 2>/dev/null || true
       fi
+      ((count++)) || true
     done
   done < "$META_FILE"
+  log "META applied: $count entries"
 }
 
 apply_chunk_stream() {
@@ -347,20 +416,9 @@ apply_chunk_stream() {
     rsync -rltD --omit-dir-times --no-owner --no-group --no-perms \
       "$OTA_TMP/" "$dest/"
   else
-    # 关键：复制阶段不改已有权限/属主（保持你原有“复制哪些文件”的内容不变）
+    # 关键：复制阶段不改已有权限/属主
     rsync -rltD --omit-dir-times --no-owner --no-group --no-perms \
       "$OTA_TMP/" "$dest/"
-
-    # modules：保持原逻辑的“删除同步”
-    if [[ -d "$OTA_TMP/usr/lib/modules" ]]; then
-      mkdir -p /usr/lib/modules
-      rsync -rltD --delete --omit-dir-times --no-owner --no-group --no-perms \
-        "$OTA_TMP/usr/lib/modules/" "/usr/lib/modules/"
-    fi
-
-    if command -v depmod >/dev/null 2>&1; then
-      depmod -a 4.4.189 2>/dev/null || true
-    fi
   fi
 
   rm -rf "$OTA_TMP"
@@ -379,26 +437,31 @@ apply_legacy_rsync() {
   fi
 }
 
+log "=== Step 4: Apply chunks ==="
 # 应用更新（优先 chunks 流式模式）
 if [[ -n "$OTA_TAR_PATH" && -f "$OTA_TAR_PATH" && -f "$CHUNKS_FILE" ]]; then
   while read -r t m; do
     [[ -z "${t:-}" || -z "${m:-}" ]] && continue
+    log "Applying chunk: $m"
     apply_chunk_stream "$t" "$m"
     sync || true
   done < "$CHUNKS_FILE"
+  log "All chunks applied"
 else
+  log "Using legacy rsync mode"
   apply_legacy_rsync
 fi
 
+log "=== Step 5: Flash uboot ==="
 # ====== 保持原有：刷写 uboot（从 update.tar 流式读入）======
 dd_from_tar() {
   local member="$1" seek="$2"
   if ! tar -tf "$OTA_TAR_PATH" "$member" >/dev/null 2>&1; then
-    echo "[OTA] uboot member not found, skip: $member"
+    log "uboot member not found, skip: $member"
     return 0
   fi
-  echo "[OTA] flashing: $member (seek=$seek)"
-  tar -xO -f "$OTA_TAR_PATH" "$member" | dd of=/dev/mmcblk0 conv=notrunc bs=512 seek="$seek" 2>&1 | tee -a "$LOG_FILE"
+  log "Flashing: $member (seek=$seek)"
+  tar -xO -f "$OTA_TAR_PATH" "$member" | dd of=/dev/mmcblk0 conv=notrunc bs=512 seek="$seek" 2>&1 | tee -a "$OTA_LOG" | tee -a "$LOG_FILE"
 }
 
 if [[ -b "/dev/mmcblk0" && -n "$OTA_TAR_PATH" && -f "$OTA_TAR_PATH" ]]; then
@@ -406,29 +469,36 @@ if [[ -b "/dev/mmcblk0" && -n "$OTA_TAR_PATH" && -f "$OTA_TAR_PATH" ]]; then
   dd_from_tar "uboot/uboot.img" 16384
   dd_from_tar "uboot/trust.img" 24576
   sync || true
+  log "uboot flashed successfully"
+else
+  log "Skipping uboot flash (no mmcblk0 or no tar)"
 fi
 
-# plymouth title: ArkOS4Clone (MMDDYYYY)(MODDER) ——保持原逻辑
+log "=== Step 6: Update plymouth theme ==="
+# plymouth title: ArkOS4Clone (MMDDYYYY)(MODDER)
 PLYMOUTH_THEME="/usr/share/plymouth/themes/text.plymouth"
 if [[ -f "$BASE/VERSION" && -f "$PLYMOUTH_THEME" ]]; then
   VER_RAW="$(cat "$BASE/VERSION" 2>/dev/null || true)"
   UPDATE_DATE="$(echo "$VER_RAW" | cut -d- -f2)"
   MODDER="$(echo "$VER_RAW" | cut -d- -f3-)"
   sed -i "/^title=/c\title=ArkOS4Clone (${UPDATE_DATE})(${MODDER})" "$PLYMOUTH_THEME" 2>/dev/null || true
+  log "Plymouth updated: ArkOS4Clone (${UPDATE_DATE})(${MODDER})"
 fi
 
+log "=== Step 7: Cleanup old files ==="
 # ====== 保持原有：删服务文件、删 es_input、删 imageshift、删工具等 ======
-rm -f /etc/systemd/system/batt_led.service 2>/dev/null || true
-rm -f /etc/systemd/system/ddtbcheck.service 2>/dev/null || true
+rm -f /etc/systemd/system/batt_led.service 2>/dev/null && log "Removed: batt_led.service" || true
+rm -f /etc/systemd/system/ddtbcheck.service 2>/dev/null && log "Removed: ddtbcheck.service" || true
+chmod 644 /lib/systemd/system/mpv.service 2>/dev/null && log "Fixed: mpv.service chmod 644" || true
 
-rm -f /etc/emulationstation/es_input.cfg 2>/dev/null || true
+rm -f /etc/emulationstation/es_input.cfg 2>/dev/null && log "Removed: es_input.cfg" || true
 
-sed -i '/imageshift\.sh/d' /var/spool/cron/crontabs/root 2>/dev/null || true
-rm -f /home/ark/.config/imageshift.sh 2>/dev/null || true
+sed -i '/imageshift\.sh/d' /var/spool/cron/crontabs/root 2>/dev/null && log "Removed: imageshift.sh from cron" || true
+rm -f /home/ark/.config/imageshift.sh 2>/dev/null && log "Removed: imageshift.sh" || true
 
-rm -rf /opt/system/DeviceType 2>/dev/null || true
-rm -rf "/opt/system/Change LED to Red.sh" 2>/dev/null || true
-rm -rf "/opt/system/Advanced/Change Ports SDL.sh" 2>/dev/null || true
+rm -rf /opt/system/DeviceType 2>/dev/null && log "Removed: DeviceType" || true
+rm -rf "/opt/system/Change LED to Red.sh" 2>/dev/null && log "Removed: Change LED to Red.sh" || true
+rm -rf "/opt/system/Advanced/Change Ports SDL.sh" 2>/dev/null && log "Removed: Change Ports SDL.sh" || true
 find /opt/system/Advanced -name 'Restore*.sh' ! -name 'Restore ArkOS Settings.sh' -exec rm -f {} + 2>/dev/null || true
 rm -rf "/opt/system/Advanced/Screen - Switch to Original Screen Timings.sh" 2>/dev/null || true
 rm -rf "/opt/system/Advanced/Reset EmulationStation Controls.sh" 2>/dev/null || true
@@ -436,34 +506,41 @@ rm -rf "/opt/system/Advanced/Fix Global Hotkeys.sh" 2>/dev/null || true
 
 # 351Files 重命名（保持原逻辑）
 if [[ -e "/opt/351Files/351Files" ]]; then
-  mv "/opt/351Files/351Files" "/opt/351Files/351Files.old" 2>/dev/null || true
+  mv "/opt/351Files/351Files" "/opt/351Files/351Files.old" 2>/dev/null && log "Renamed: 351Files -> 351Files.old" || true
 fi
 
+log "=== Step 8: Apply permissions (META) ==="
 # ====== (关键新增) 最后只修正“我们交付文件”的权限/属主 ======
 apply_meta
 
+log "=== Step 9: Fix modules permissions ==="
 # 维持你旧的 modules 修复（只动 /usr/lib/modules/4.4.189）
 fix_modules_perms() {
   local base="/usr/lib/modules/4.4.189"
-  [[ -d "$base" ]] || return 0
+  [[ -d "$base" ]] || { log "modules dir not found: $base"; return 0; }
+  log "Fixing modules: $base"
   chown -R root:root "$base" 2>/dev/null || true
   find "$base" -type d -exec chmod 755 {} + 2>/dev/null || true
   find "$base" -type f -exec chmod 644 {} + 2>/dev/null || true
+  local ko_count; ko_count=$(find "$base" -name "*.ko" 2>/dev/null | wc -l)
+  log "Fixed $ko_count .ko files"
   if command -v depmod >/dev/null 2>&1; then
-    depmod -a 4.4.189 2>/dev/null || true
+    depmod -a 4.4.189 2>/dev/null && log "depmod completed" || true
   fi
 }
 fix_modules_perms
 
+log "=== Step 10: Enable services ==="
 # systemd：按你旧逻辑启用 adckeys
 if have_systemctl; then
   systemctl daemon-reload 2>/dev/null || true
-  systemctl enable adckeys.service 2>/dev/null || true
-  systemctl restart adckeys.service 2>/dev/null || true
+  systemctl enable adckeys.service 2>/dev/null && log "Enabled: adckeys.service" || true
+  systemctl restart adckeys.service 2>/dev/null && log "Started: adckeys.service" || true
 fi
 
 sync
-echo "[OTA] SUCCESS"
+log "========== OTA Update Complete =========="
+log "OTA SUCCESS"
 EOF
 chmod +x "$STAGE/install.sh"
 
