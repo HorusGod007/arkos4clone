@@ -79,6 +79,9 @@ rsync $RSYNC_BOOT_OPTS --exclude='files' ./consoles/ "$PAYLOAD_BOOT/consoles/"
 # clone.sh 在 OTA 中必须直接生成为 /boot/firstboot.sh
 cp -f ./sh/clone.sh "$PAYLOAD_BOOT/firstboot.sh"
 
+# rk817 battery/charger kernel modules (fixes #243)
+cp -f ./modules/rk817_battery.ko ./modules/rk817_charger.ko "$PAYLOAD_BOOT/" 2>/dev/null || true
+
 # 其他 boot 工具保持原文件名
 cp -f ./dtb_selector_macos \
       ./dtb_selector_win32.exe \

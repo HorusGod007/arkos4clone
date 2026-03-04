@@ -418,6 +418,10 @@ main() {
   sudo depmod -a 2>/dev/null || true
   [[ "$LED_TYPE" == "ws2812" ]] && { msg "Loading spidev for ws2812"; sudo modprobe spidev 2>/dev/null || true; }
 
+  # Load rK817 battery/charger drivers (fixes #243)
+  [[ -f /boot/rk817_battery.ko ]] && { sudo insmod /boot/rk817_battery.ko 2>/dev/null || true; }
+  [[ -f /boot/rk817_charger.ko ]] && { sudo insmod /boot/rk817_charger.ko 2>/dev/null || true; }
+
   # 音频配置
   setup_audio
 
